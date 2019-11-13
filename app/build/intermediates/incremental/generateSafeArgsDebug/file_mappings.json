@@ -1,0 +1,1 @@
+[{"navFile":"src/main/res/navigation/nav_graph.xml","javaFiles":["com.subhash.deezer.ui.search.SearchFragmentDirections","com.subhash.deezer.ui.album.AlbumFragmentDirections","com.subhash.deezer.ui.album.AlbumFragmentArgs","com.subhash.deezer.ui.tracks.TracksFragmentArgs"]}]

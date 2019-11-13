@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/searchFragment">
+
+    <fragment
+        android:id="@+id/searchFragment"
+        android:name="com.subhash.deezer.ui.search.SearchFragment"
+        tools:layout="@layout/search_fragment">
+        <action
+            android:id="@+id/action_search_to_albums"
+            app:destination="@+id/albumFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/albumFragment"
+        android:name="com.subhash.deezer.ui.album.AlbumFragment"
+        tools:layout="@layout/album_fragment">
+        <argument
+            android:name="artistId"
+            app:argType="string"
+            app:nullable="false" />
+        <argument
+            android:name="artistName"
+            app:argType="string"
+            app:nullable="false" />
+        <action
+            android:id="@+id/action_album_to_tracks"
+            app:destination="@+id/tracksFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/tracksFragment"
+        android:name="com.subhash.deezer.ui.tracks.TracksFragment"
+        tools:layout="@layout/tracks_fragment">
+        <argument
+            android:name="albumInfo"
+            app:argType="com.subhash.deezer.ui.tracks.TrackFragmentArguments"
+            app:nullable="false" />
+    </fragment>
+
+</navigation>
