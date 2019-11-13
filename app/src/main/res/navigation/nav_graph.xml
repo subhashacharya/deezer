@@ -11,7 +11,11 @@
         tools:layout="@layout/search_fragment">
         <action
             android:id="@+id/action_search_to_albums"
-            app:destination="@+id/albumFragment" />
+            app:destination="@+id/albumFragment"
+            app:enterAnim="@anim/slide_up_in"
+            app:exitAnim="@anim/slide_down_out"
+            app:popEnterAnim="@anim/slide_down_in"
+            app:popExitAnim="@anim/slide_up_out" />
     </fragment>
 
     <fragment
@@ -28,7 +32,11 @@
             app:nullable="false" />
         <action
             android:id="@+id/action_album_to_tracks"
-            app:destination="@+id/tracksFragment" />
+            app:destination="@+id/tracksFragment"
+            app:enterAnim="@anim/slide_up_in"
+            app:exitAnim="@anim/slide_down_out"
+            app:popEnterAnim="@anim/slide_down_in"
+            app:popExitAnim="@anim/slide_up_out" />
     </fragment>
 
     <fragment
