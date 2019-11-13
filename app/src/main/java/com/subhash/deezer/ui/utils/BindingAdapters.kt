@@ -23,6 +23,13 @@ fun loadAlbumArt(imageView: ImageView, url: String) {
     }
 }
 
+@BindingAdapter("fullAlbumArt")
+fun loadFullAlbumArt(imageView: ImageView, url: String) {
+    imageView.load(url) {
+        crossfade(true)
+    }
+}
+
 @BindingAdapter("visible")
 fun setVisible(view: View, visible: Boolean?) {
     view.isVisible = visible == true
