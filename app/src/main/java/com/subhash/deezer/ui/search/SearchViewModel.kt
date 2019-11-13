@@ -1,6 +1,7 @@
 package com.subhash.deezer.ui.search
 
 import androidx.lifecycle.*
+import com.subhash.deezer.R
 import com.subhash.deezer.repository.Result
 import com.subhash.deezer.repository.getBaseResponseData
 import com.subhash.deezer.repository.model.Artist
@@ -37,16 +38,25 @@ class SearchViewModel @Inject constructor(
         disposables.add(subscribeToQuery())
     }
 
-    private fun updateViewState(result: Result<BaseResponse<List<Artist>>>) {
-        val artists = result.getBaseResponseData()?.map { artist ->
-            ArtistItem(artist.id, artist.name, artist.picture_small)
-        } ?: emptyList()
+    private fun updateViewState(query: String, result: Result<BaseResponse<List<Artist>>>) {
+        val artistsResult = result.getBaseResponseData()
+        val resultItems: List<SearchResultItem> = if (artistsResult.isNullOrEmpty()) {
+            emptyList()
+        } else {
+            mutableListOf<SearchResultItem>().apply {
+                add(HeaderItem(R.string.artists_header))
+                artistsResult.forEach { artist ->
+                    add(ArtistItem(artist.id, artist.name, artist.picture_small))
+                }
+            }
+        }
         _searchViewState.postValue(
             SearchViewState(
+                query = query,
                 isLoading = result is Result.Loading,
                 isError = result is Result.Error,
                 errorMessage = (result as? Result.Error)?.message,
-                searchResultItems = artists
+                searchResultItems = resultItems
             )
         )
     }
@@ -56,16 +66,17 @@ class SearchViewModel @Inject constructor(
             .subscribeOn(Schedulers.io())
             .map { it.trim() }
             .debounce(QUERY_WAIT_DURATION, TimeUnit.MILLISECONDS)
+            .filter { it.length > MAX_QUERY_CHARACTERS && it != searchViewState.value?.query}
             .subscribe { disposables.add(performSearch(it)) }
     }
 
     private fun performSearch(query: String): Disposable {
-        updateViewState(Result.Loading)
+        updateViewState(query, Result.Loading)
         return networkRepository.searchArtists(query)
             .subscribe({
-                updateViewState(Result.Success(it))
+                updateViewState(query, Result.Success(it))
             }, {
-                updateViewState(Result.Error(message = it?.message, error = it))
+                updateViewState(query, Result.Error(message = it?.message, error = it))
             })
     }
 
@@ -84,5 +95,6 @@ class SearchViewModel @Inject constructor(
 
     companion object {
         private const val QUERY_WAIT_DURATION = 300L //MS
+        private const val MAX_QUERY_CHARACTERS = 2
     }
 }

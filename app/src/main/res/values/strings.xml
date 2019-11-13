@@ -2,5 +2,6 @@
     <string name="app_name">Deezer</string>
 
     <string name="artists">artists</string>
+    <string name="artists_header">Artists</string>
     <string name="albums">Albums</string>
 </resources>

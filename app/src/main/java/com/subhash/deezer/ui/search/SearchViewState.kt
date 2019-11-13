@@ -3,6 +3,7 @@ package com.subhash.deezer.ui.search
 import androidx.annotation.StringRes
 
 data class SearchViewState(
+    val query: String? = null,
     val isLoading: Boolean = false,
     val isError: Boolean = false,
     val errorMessage: String? = null,
