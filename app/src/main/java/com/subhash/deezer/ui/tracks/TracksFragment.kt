@@ -4,17 +4,17 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.view.updateLayoutParams
+import android.view.animation.AccelerateInterpolator
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.appbar.AppBarLayout
-import com.subhash.deezer.R
 import com.subhash.deezer.databinding.TracksFragmentBinding
 import com.subhash.deezer.ui.utils.getViewModel
 import dagger.android.support.DaggerFragment
 import javax.inject.Inject
 import kotlin.math.abs
+import kotlin.math.min
 
 class TracksFragment : DaggerFragment() {
 
@@ -44,6 +44,13 @@ class TracksFragment : DaggerFragment() {
             tracksList.adapter = TracksAdapter(trackViewModel.viewState, viewLifecycleOwner)
 
             toolbar.setNavigationOnClickListener { findNavController().popBackStack() }
+
+            val interpolator = AccelerateInterpolator()
+            appBar.addOnOffsetChangedListener(AppBarLayout.OnOffsetChangedListener { appBar, offset ->
+                val offsetRange =
+                    min(appBar.totalScrollRange, abs(offset)) / appBar.totalScrollRange.toFloat()
+                subTitle.alpha = interpolator.getInterpolation(1f - offsetRange)
+            })
         }
     }
 }

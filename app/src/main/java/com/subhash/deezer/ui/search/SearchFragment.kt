@@ -36,6 +36,7 @@ class SearchFragment : DaggerFragment() {
             )
 
             viewModel = searchViewModel
+            listener = searchViewModel
             lifecycleOwner = viewLifecycleOwner
         }
 
