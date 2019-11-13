@@ -60,6 +60,7 @@ class SearchViewModel @Inject constructor(
     }
 
     private fun performSearch(query: String): Disposable {
+        updateViewState(Result.Loading)
         return networkRepository.searchArtists(query)
             .subscribe({
                 updateViewState(Result.Success(it))
