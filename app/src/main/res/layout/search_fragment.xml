@@ -34,6 +34,7 @@
                 android:padding="@dimen/margin_small">
 
                 <EditText
+                    android:id="@+id/searchEditText"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
@@ -45,6 +46,7 @@
                     android:importantForAutofill="no"
                     android:inputType="text"
                     android:singleLine="true"
+                    android:imeOptions="actionSearch"
                     android:text="@={viewModel.searchQuery}" />
 
                 <ImageView
