@@ -3,13 +3,13 @@ package com.subhash.deezer.ui.tracks
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.subhash.deezer.repository.Result
+import com.subhash.deezer.repository.getBaseResponseData
 import com.subhash.deezer.repository.model.BaseResponse
 import com.subhash.deezer.repository.model.Track
 import com.subhash.deezer.repository.network.NetworkRepository
-import com.subhash.deezer.repository.Result
-import com.subhash.deezer.repository.getBaseResponseData
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class TracksViewModel @Inject constructor(
@@ -25,23 +25,19 @@ class TracksViewModel @Inject constructor(
     private val _viewState = MutableLiveData<TracksViewState>()
     val viewState: LiveData<TracksViewState> get() = _viewState
 
-    private val disposables = CompositeDisposable()
-
     fun setTrackInfo(arguments: TrackFragmentArguments) {
         this.arguments = arguments
-        loadTrackForAlbum(arguments.albumId)
+        viewModelScope.launch {
+            loadTrackForAlbum(arguments.albumId)
+        }
     }
 
-    private fun loadTrackForAlbum(albumId: String) {
-        disposables.add(
-            networkRepository.getTracks(albumId)
-                .subscribeOn(Schedulers.io())
-                .subscribe({
-                    updateViewState(Result.Success(it))
-                }, {
-                    updateViewState(Result.Error(it.message, it))
-                })
-        )
+    private suspend fun loadTrackForAlbum(albumId: String) {
+        try {
+            updateViewState(Result.Success(networkRepository.getTracks(albumId)))
+        } catch (e: Exception) {
+            updateViewState(Result.Error(e.message, e))
+        }
     }
 
     private fun updateViewState(result: Result<BaseResponse<List<Track>>>) {
@@ -56,9 +52,5 @@ class TracksViewModel @Inject constructor(
                 trackItems = trackItems
             )
         )
-    }
-
-    override fun onCleared() {
-        disposables.clear()
     }
 }

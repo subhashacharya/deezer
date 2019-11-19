@@ -8,24 +8,14 @@ import com.subhash.deezer.repository.model.Artist
 import com.subhash.deezer.repository.model.BaseResponse
 import com.subhash.deezer.repository.network.NetworkRepository
 import com.subhash.deezer.ui.utils.LiveEvent
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.disposables.Disposable
-import io.reactivex.schedulers.Schedulers
-import io.reactivex.subjects.PublishSubject
-import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class SearchViewModel @Inject constructor(
     private val networkRepository: NetworkRepository
 ) : ViewModel(), SearchEventsListener {
-
-    private val querySubject = PublishSubject.create<String>()
-    private val disposables = CompositeDisposable()
-
     val searchQuery = MutableLiveData<String>("")
-    private val queryInputObserver = Observer<String> {
-        querySubject.onNext(it)
-    }
 
     private val _searchViewState = MutableLiveData<SearchViewState>()
     val searchViewState: LiveData<SearchViewState> get() = _searchViewState
@@ -34,11 +24,12 @@ class SearchViewModel @Inject constructor(
     val navigateToAlbums: LiveData<ArtistItem> get() = _navigateToAlbums
 
     init {
-        searchQuery.observeForever(queryInputObserver)
-        disposables.add(subscribeToQuery())
+        viewModelScope.launch {
+            subscribeToQuery()
+        }
     }
 
-    private fun updateViewState(query: String, result: Result<BaseResponse<List<Artist>>>) {
+    private fun updateViewState(result: Result<BaseResponse<List<Artist>>>) {
         val artistsResult = result.getBaseResponseData()
         val resultItems: List<SearchResultItem> = if (artistsResult.isNullOrEmpty()) {
             emptyList()
@@ -52,7 +43,6 @@ class SearchViewModel @Inject constructor(
         }
         _searchViewState.postValue(
             SearchViewState(
-                query = query,
                 isLoading = result is Result.Loading,
                 isError = result is Result.Error,
                 errorMessage = (result as? Result.Error)?.message,
@@ -61,28 +51,21 @@ class SearchViewModel @Inject constructor(
         )
     }
 
-    private fun subscribeToQuery(): Disposable {
-        return querySubject
-            .subscribeOn(Schedulers.io())
-            .map { it.trim() }
-            .debounce(QUERY_WAIT_DURATION, TimeUnit.MILLISECONDS)
-            .filter { it.length > MAX_QUERY_CHARACTERS && it != searchViewState.value?.query}
-            .subscribe { disposables.add(performSearch(it)) }
-    }
-
-    private fun performSearch(query: String): Disposable {
-        updateViewState(query, Result.Loading)
-        return networkRepository.searchArtists(query)
-            .subscribe({
-                updateViewState(query, Result.Success(it))
-            }, {
-                updateViewState(query, Result.Error(message = it?.message, error = it))
-            })
-    }
-
-    override fun onCleared() {
-        disposables.clear()
-        searchQuery.removeObserver(queryInputObserver)
+    private suspend fun subscribeToQuery() {
+        searchQuery.asFlow()
+            .debounce(QUERY_WAIT_DURATION)
+            .distinctUntilChanged()
+            .filter { it.length > MAX_QUERY_CHARACTERS }
+            .onEach {
+                updateViewState(Result.Loading)
+            }.collect {
+                val result = try {
+                    Result.Success(networkRepository.searchArtists(it))
+                } catch (e: Exception) {
+                    Result.Error(message = e.message, error = e)
+                }
+                updateViewState(result)
+            }
     }
 
     override fun onArtistSelected(artist: ArtistItem) {

@@ -3,14 +3,14 @@ package com.subhash.deezer.ui.album
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.subhash.deezer.repository.Result
+import com.subhash.deezer.repository.getBaseResponseData
 import com.subhash.deezer.repository.model.Album
 import com.subhash.deezer.repository.model.BaseResponse
 import com.subhash.deezer.repository.network.NetworkRepository
-import  com.subhash.deezer.repository.Result
-import com.subhash.deezer.repository.getBaseResponseData
 import com.subhash.deezer.ui.utils.LiveEvent
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class AlbumViewModel @Inject constructor(
@@ -25,19 +25,15 @@ class AlbumViewModel @Inject constructor(
     private val _navigateToAlbumTracks = LiveEvent<AlbumItem>()
     val navigateToAlbumTrack: LiveData<AlbumItem> get() = _navigateToAlbumTracks
 
-    private val disposables = CompositeDisposable()
-
     fun initializeArtist(artistId: String, artistName: String) {
         this.artistName = artistName
-        disposables.add(
-            networkRepository.getAlbums(artistId)
-                .subscribeOn(Schedulers.io())
-                .subscribe({
-                    updateViewState(Result.Success(data = it))
-                }, {
-                    updateViewState(Result.Error(message = it.message, error = it))
-                })
-        )
+        viewModelScope.launch {
+            try {
+                updateViewState(Result.Success(data = networkRepository.getAlbums(artistId)))
+            } catch (e: Exception) {
+                updateViewState(Result.Error(message = e.message, error = e))
+            }
+        }
     }
 
     private fun updateViewState(result: Result<BaseResponse<List<Album>>>) {
@@ -52,10 +48,6 @@ class AlbumViewModel @Inject constructor(
                 albumsResultItems = albums
             )
         )
-    }
-
-    override fun onCleared() {
-        disposables.clear()
     }
 
     override fun onAlbumSelected(albumItem: AlbumItem) {
